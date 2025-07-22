@@ -4,7 +4,7 @@ import (
 	"go_casbin/api"
 	"go_casbin/internal/config"
 	"go_casbin/internal/logger"
-	"go_casbin/internal/service"
+	"go_casbin/pkg/casbin"
 	"go_casbin/pkg/jwt"
 )
 
@@ -15,7 +15,11 @@ func init() {
 	config.InitConfig("configs/config.dev.yaml") // 初始化配置
 	jwt.InitJWTConfig(nil)
 	// 初始化casbin服务
-	err := service.InitCasbin()
+	err := casbin.InitCasbin(casbin.CasbinOptions{
+		Driver: config.ViperConfig.Casbin.Driver,
+		DataSource: config.ViperConfig.Casbin.DataSource,
+		ModelPath: config.ViperConfig.Casbin.ModelPath,
+	})
 	if err != nil {
 		logger.ErrorWithErr("初始化CasbinService失败", err)
 		panic(err)

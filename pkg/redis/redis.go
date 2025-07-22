@@ -27,6 +27,10 @@ type RedisService interface {
 	LPush(ctx context.Context, key string, values ...interface{}) error
 	RPop(ctx context.Context, key string) (string, error)
 	LRange(ctx context.Context, key string, start, stop int64) ([]string, error)
+	Publish(ctx context.Context, channel string, message interface{}) error
+	Subscribe(ctx context.Context, channel string) *redis.PubSub
+	TryLock(ctx context.Context, key, value string, expiration time.Duration) (bool, error)
+	Unlock(ctx context.Context, key, value string) (bool, error)
 }
 type RedisServiceImpl struct {
 	client *redis.Client
@@ -121,4 +125,33 @@ func (r *RedisServiceImpl) RPop(ctx context.Context, key string) (string, error)
 // LRange
 func (r *RedisServiceImpl) LRange(ctx context.Context, key string, start, stop int64) ([]string, error) {
 	return r.client.LRange(ctx, key, start, stop).Result()
+}
+
+// Publish
+func (r *RedisServiceImpl) Publish(ctx context.Context, channel string, message interface{}) error {
+	return r.client.Publish(ctx, channel, message).Err()
+}
+
+// Subscribe
+func (r *RedisServiceImpl) Subscribe(ctx context.Context, channel string) *redis.PubSub {
+	return r.client.Subscribe(ctx, channel)
+}
+
+// TryLock 尝试加锁
+func (r *RedisServiceImpl) TryLock(ctx context.Context, key, value string, expiration time.Duration) (bool, error) {
+	ok, err := r.client.SetNX(ctx, key, value, expiration).Result()
+	return ok, err
+}
+
+// Unlock 释放锁（只删除自己加的锁，防止误删）
+func (r *RedisServiceImpl) Unlock(ctx context.Context, key, value string) (bool, error) {
+	// 用 Lua 脚本保证原子性
+	script := `
+if redis.call("get", KEYS[1]) == ARGV[1] then
+	return redis.call("del", KEYS[1])
+else
+	return 0
+end`
+	res, err := r.client.Eval(ctx, script, []string{key}, value).Result()
+	return res.(int64) == 1, err
 }

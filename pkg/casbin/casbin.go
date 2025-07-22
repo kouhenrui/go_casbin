@@ -1,4 +1,4 @@
-package service
+package casbin
 
 import (
 	"go_casbin/internal/config"
@@ -22,9 +22,14 @@ type CasbinEnforcer struct {
 	adapter  *gormadapter.Adapter
 	model    *model.Model
 }
+type CasbinOptions struct {
+	Driver string
+	DataSource string
+	ModelPath string
+}
 
 // InitCasbin 初始化casbin服务
-func InitCasbin() (initErr error) {
+func InitCasbin(options CasbinOptions) (initErr error) {
 	// once.Do(func() {
 	var enforcer *casbin.Enforcer
 	var adapter *gormadapter.Adapter
@@ -32,16 +37,16 @@ func InitCasbin() (initErr error) {
 	var err error
 
 	// 根据driver类型选择不同的初始化方式
-	if config.ViperConfig.Casbin.Driver == "file" {
+	if options.Driver == "file" {
 		// 文件模式 - 使用项目根目录的绝对路径
-		modelPath, err := path.GetAbsolutePath(config.ViperConfig.Casbin.ModelPath)
+		modelPath, err := path.GetAbsolutePath(options.ModelPath)
 		if err != nil {
 			logger.ErrorWithErr("获取项目根目录失败", err)
 			initErr = err
 			return
 		}
 
-		adapterPath, err := path.GetAbsolutePath(config.ViperConfig.Casbin.DataSource)
+		adapterPath, err := path.GetAbsolutePath(options.DataSource)
 		if err != nil {
 			logger.ErrorWithErr("获取项目根目录失败", err)
 			initErr = err
@@ -51,8 +56,8 @@ func InitCasbin() (initErr error) {
 		enforcer, err = casbin.NewEnforcer(modelPath, adapterPath)
 	} else {
 		// 数据库模式
-		adapter := gormadapter.NewAdapter(config.ViperConfig.Casbin.Driver, config.ViperConfig.Casbin.DataSource)
-		enforcer, err = casbin.NewEnforcer(config.ViperConfig.Casbin.ModelPath, adapter)
+		adapter := gormadapter.NewAdapter(options.Driver, options.DataSource)
+		enforcer, err = casbin.NewEnforcer(options.ModelPath, adapter)
 	}
 
 	if err != nil {
