@@ -1,6 +1,7 @@
 package api
 
 import (
+	"go_casbin/internal/controller/workFlow"
 	"go_casbin/internal/logger"
 	"go_casbin/internal/middleware/response"
 
@@ -71,6 +72,17 @@ func RegisterRoutes(r *gin.Engine) {
 		v1.GET("/error", func(c *gin.Context) {
 			// middleware.Error(c,666,"模拟错误发出")
 			panic("这是一个panic测试")
-		})	
+		})
+		
+		workFlowController := workFlow.NewWorkFlowController()
+		v1.POST("/workFlow/create", workFlowController.CreateWorkFlow)//创建工作流模版
+		v1.GET("/workFlow/get", workFlowController.GetWorkFlow)//获取工作流模版
+		v1.GET("/workFlow/getList", workFlowController.GetWorkFlowList)//获取工作流模版列表
+		v1.POST("/workFlow/update", workFlowController.UpdateWorkFlow)//更新工作流模版
+		v1.POST("/workFlow/createInstance", workFlowController.CreateWorkFlowInstance)//创建工作流实例
+		v1.GET("/workFlow/getInstance", workFlowController.GetWorkFlowInstance)//获取工作流实例
+		v1.GET("/workFlow/getInstanceList", workFlowController.GetWorkFlowInstanceList)//获取工作流实例列表
+		v1.POST("/workFlow/deleteInstance", workFlowController.DeleteWorkFlowInstance)//删除工作流实例
+		v1.POST("/workFlow/approveInstance", workFlowController.ApproveWorkFlowInstance)//审批工作流实例
 	}
 }

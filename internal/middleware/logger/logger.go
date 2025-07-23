@@ -32,7 +32,7 @@ func Logger() gin.HandlerFunc {
 				traceID = id.(string)
 			}
 		}
-		
+
 		// 使用结构化日志记录请求信息
 		logger.Info("HTTP请求",
 			logger.String("method", param.Method),
@@ -73,26 +73,26 @@ func RequestLogger() gin.HandlerFunc {
 
 		// 计算处理时间
 		latency := time.Since(start)
-		
+
 		// 获取追踪ID
 		traceID := response.GetTraceID(c)
-
-		// 记录请求日志
-		logger.Info("HTTP请求详情",
-			logger.String("method", c.Request.Method),
-			logger.String("path", c.Request.URL.Path),
-			logger.String("query", c.Request.URL.RawQuery),
-			logger.String("client_ip", c.ClientIP()),
-			logger.String("user_agent", c.Request.UserAgent()),
-			logger.String("referer", c.Request.Referer()),
-			logger.Int("status_code", c.Writer.Status()),
-			logger.Duration("latency", latency),
-			logger.Int("request_size", len(requestBody)),
-			logger.Int("response_size", blw.body.Len()),
-			logger.String("request_body", string(requestBody)),
-			logger.String("response_body", blw.body.String()),
-			logger.String("trace_id", traceID),
-		)
+		body := make(map[string]interface{})
+		body["method"] = c.Request.Method
+		body["path"] = c.Request.URL.Path
+		body["query"] = c.Request.URL.RawQuery
+		body["client_ip"] = c.ClientIP()
+		body["user_agent"] = c.Request.UserAgent()
+		body["referer"] = c.Request.Referer()
+		body["status_code"] = c.Writer.Status()
+		body["latency"] = latency
+		body["request_size"] = len(requestBody)
+		body["response_size"] = blw.body.Len()
+		if len(requestBody) <= 1024 {
+			body["request_body"] = string(requestBody)
+		}
+		body["response_body"] = blw.body.String()
+		body["trace_id"] = traceID
+		logger.InfoMap("HTTP请求详情", body)
 
 		// 记录错误日志
 		if len(c.Errors) > 0 {

@@ -140,6 +140,11 @@ func InternalServerError(c *gin.Context, message string) {
 	Error(c, http.StatusInternalServerError, message)
 }
 
+//程序内部逻辑错误
+func LogicError(c *gin.Context, message string) {
+	Error(c, -1, message)
+}
+
 // ValidationError 验证错误响应
 func ValidationError(c *gin.Context, errors interface{}) {
 	response := Response{
