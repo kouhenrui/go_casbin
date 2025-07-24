@@ -1,5 +1,7 @@
 package config
 
+import "time"
+
 type Config struct {
 	Service  Service  `yaml:"service" json:"service" mapstructure:"service"`
 	Casbin   Casbin   `yaml:"casbin" json:"casbin" mapstructure:"casbin"`
@@ -7,6 +9,8 @@ type Config struct {
 	Database Database `yaml:"database" json:"database" mapstructure:"database"`
 	Middleware MiddlewareConfig `yaml:"middleware" json:"middleware" mapstructure:"middleware"`
 	JWT      JWT      `yaml:"jwt" json:"jwt" mapstructure:"jwt"`
+	Redis    Redis    `yaml:"redis" json:"redis" mapstructure:"redis"`
+	Etcd     Etcd     `yaml:"etcd" json:"etcd" mapstructure:"etcd"`
 }
 
 type Service struct {
@@ -95,8 +99,18 @@ type MiddlewareConfig struct {
 	UseRateLimitErrorHandler bool `yaml:"useRateLimitErrorHandler" json:"useRateLimitErrorHandler" mapstructure:"useRateLimitErrorHandler"`
 }
 
+type Redis struct {
+	Addr     string  // 地址
+	Username *string // 用户名
+	Password *string // 密码
+}
 
-
+type Etcd struct {
+	Endpoints   []string
+	DialTimeout time.Duration
+	Username    string
+	Password    string
+}
 // DevelopmentMiddlewareConfig 开发环境中间件配置
 func DevelopmentMiddlewareConfig() MiddlewareConfig {
 	return MiddlewareConfig{
