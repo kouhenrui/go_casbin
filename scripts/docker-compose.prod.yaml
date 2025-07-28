@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: scripts/dockerfile.prod
+    container_name: gim-app
+    ports:
+      - "90000:90000"
+    volumes:
+      - .:/app
+      - ./configs:/app/configs
+    working_dir: /app
+    command: ./main
+    environment:
+      - GIN_MODE=release
+    restart: unless-stopped

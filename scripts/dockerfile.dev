@@ -1,0 +1,29 @@
+# 开发环境 Dockerfile - 多阶段构建优化版本
+# 第一阶段：依赖安装和构建
+FROM golang:1.24-alpine
+
+
+# 安装必要工具
+RUN apk add --no-cache git curl
+
+# 设置工作目录
+WORKDIR /app
+
+# 设置时区（可选）
+RUN apk add --no-cache tzdata \
+    && cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
+    && echo "Asia/Shanghai" > /etc/timezone \
+    && apk del tzdata
+# 复制包管理文件
+COPY go.mod go.sum ./
+
+# 仅安装生产依赖
+RUN go mod download
+
+# 设置环境变量
+ENV NODE_ENV=development 
+# 暴露端口
+EXPOSE 90000
+
+# 启动应用
+CMD ["go", "run", "cmd/main.go"]
